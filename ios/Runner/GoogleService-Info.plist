@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>279953160124-j6te82u52kppg24875ml8tajlofaspjf.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.279953160124-j6te82u52kppg24875ml8tajlofaspjf</string>
+	<key>API_KEY</key>
+	<string>AIzaSyAof2PuUgZhtmtKuOCxbIEvHvNlsdL0c1M</string>
+	<key>GCM_SENDER_ID</key>
+	<string>279953160124</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>br.vinnys.stocial</string>
+	<key>PROJECT_ID</key>
+	<string>stocial2021</string>
+	<key>STORAGE_BUCKET</key>
+	<string>stocial2021.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:279953160124:ios:6b20ba08edcffcaccaddb9</string>
+</dict>
+</plist>
