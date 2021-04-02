@@ -4,6 +4,11 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:stocial/login_screen.dart';
 import 'package:stocial/splash_screen.dart';
+import 'package:stocial/td_ameritrade_consumer_key_screen.dart';
+import 'package:stocial/td_ameritrade_screen.dart';
+import 'package:stocial/wallet_screen.dart';
+
+import 'constants/routes.dart';
 
 bool useFirestoreEmulator = false;
 FirebaseFirestore? firestore;
@@ -28,7 +33,27 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: SplashScreen(),
+      initialRoute: Routes.splash,
+      onGenerateRoute: (settings) {
+
+        final args = settings.arguments;
+
+        switch (settings.name) {
+          case Routes.splash: return _buildRoute(SplashScreen());
+          case Routes.wallet: return _buildRoute(WalletScreen());
+          case Routes.tdAmeritrade: return _buildRoute(TDAmeritradeScreen(consumerKey: args));
+          case Routes.login: return _buildRoute(LoginScreen());
+          case Routes.tdAmeritradeKey: return _buildRoute(TDAmeritradeConsumerKeyScreen());
+        }
+      },
+    );
+  }
+
+  MaterialPageRoute _buildRoute(StatefulWidget screen) {
+    return MaterialPageRoute(
+      builder: (context) {
+        return screen;
+      },
     );
   }
 }

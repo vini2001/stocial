@@ -5,10 +5,13 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:stocial/StocialScaffold.dart';
-import 'package:stocial/StocialTextField.dart';
-import 'package:stocial/td_ameritrade_screen.dart';
+import 'package:stocial/constants/constants.dart';
+import 'package:stocial/widgets/stocial_text_field.dart';
 import 'package:stocial/user.dart';
+
+import 'constants/routes.dart';
 
 class WalletScreen extends StatefulWidget {
   @override
@@ -32,6 +35,9 @@ class WalletState extends State<WalletScreen> {
 
   StreamSubscription<DocumentSnapshot>? userStream;
 
+  bool showCEIImport = false;
+  bool loading = false;
+
   @override
   void initState() {
     super.initState();
@@ -50,8 +56,9 @@ class WalletState extends State<WalletScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  if(!(stocialUser.updatedCEI)) _buildCEIImport(),
-                  if(stocialUser.updatedCEI) Container(
+                  if(loading) CircularProgressIndicator(),
+                  if(showCEIImport) _buildCEIImport(),
+                  Container(
                     margin: EdgeInsets.only(top: 30),
                     child: Text(
                       "${getTotalReais()}",
@@ -60,7 +67,7 @@ class WalletState extends State<WalletScreen> {
                       ),
                     ),
                   ),
-                  if(stocialUser.updatedCEI) Container(
+                  Container(
                     margin: EdgeInsets.only(top: 20),
                     width: 300,
                     child: StocialTextField(
@@ -69,7 +76,7 @@ class WalletState extends State<WalletScreen> {
                       onChanged: _search,
                     ),
                   ),
-                  if(stocialUser.updatedCEI) Container(
+                  Container(
                     margin: EdgeInsets.only(top: 0),
                     width: 400,
                     height: 400,
@@ -80,11 +87,7 @@ class WalletState extends State<WalletScreen> {
                           BoxShadow(color: Colors.black26, blurRadius: 10, spreadRadius: -3)
                         ]
                     ),
-                    child: wallet != null ? ListView.builder(
-                        itemCount: wallet?.length ?? 0,
-                        itemBuilder: (context, index) {
-                          return _buildStockItem(wallet![index]!);
-                        }) : Container(),
+                    child: wallet != null ? _buildWalletList(wallet) : Container(),
                   )
                 ],
               ),
@@ -117,6 +120,7 @@ class WalletState extends State<WalletScreen> {
       wallet?.forEach((element) {
         element!['visible'] = true;
       });
+      loading = false;
     });
   }
 
@@ -151,7 +155,7 @@ class WalletState extends State<WalletScreen> {
                 child: Text('${(((((stock['price'] - stock['averagePrice']) / stock['averagePrice'])) * 100) as double).toStringAsFixed(2)} %'),
               ),
               Text(
-                "${getCurrencySymbol(stock)}${(stock['price'] as double).toStringAsFixed(2)}",
+                "${getCurrencySymbol(stock)}${(stock['price'] * 1.0).toStringAsFixed(2)}",
                 style: TextStyle(
                     decoration: TextDecoration.none,
                     fontSize: 12,
@@ -228,19 +232,27 @@ class WalletState extends State<WalletScreen> {
 
       waitForCEIUpdate(docRef);
     }
+
+    setState(() {
+      showCEIImport = false;
+      loading = true;
+    });
   }
 
   Future refreshCEI() async {
-    if(stocialUser.docRef == null) {
-      debugPrint('doc reff null');
-    }else{
-      final docRef = stocialUser.docRef!;
-      stocialUser.updatedCEI = false;
-      docRef.update({
-        'updatedCEI': false
-      });
-      waitForCEIUpdate(docRef);
+    setState(() {
+      showCEIImport = true;
+    });
+
+    FlutterSecureStorage storage = FlutterSecureStorage();
+    final user = await storage.read(key: cei_user);
+    final pass = await storage.read(key: cei_password);
+
+    if(user != null && pass != null) {
+      _cpfCEIController.text = user;
+      _passwordCEIController.text = pass;
     }
+
   }
 
   void waitForCEIUpdate(DocumentReference docRef) {
@@ -253,8 +265,8 @@ class WalletState extends State<WalletScreen> {
     });
   }
 
-  void tdAmeritrade() {
-    Navigator.of(context).push(MaterialPageRoute(builder: (context) => TDAmeritradeScreen()));
+  Future<void> tdAmeritrade() async {
+    Navigator.of(context).pushNamed(Routes.tdAmeritradeKey);
   }
 
   getCurrencySymbol(final stock) {
@@ -272,9 +284,9 @@ class WalletState extends State<WalletScreen> {
     if(wallet != null) {
       for(var stock in wallet!) {
         if(stock!['currency'] == null) {
-          totalReais += (stock['quantity'] as double) * (stock['price'] as double);
+          totalReais += (stock['quantity']) * (stock['price']);
         }else{
-          totalDolars += (stock['quantity'] as double) * (stock['price'] as double);
+          totalDolars += (stock['quantity']) * (stock['price']);
         }
       }
     }
@@ -287,5 +299,14 @@ class WalletState extends State<WalletScreen> {
     }catch(ex) {
       return false;
     }
+  }
+
+  _buildWalletList(List<Map<String, dynamic>?>? wallet) {
+    return ListView.builder(
+        itemCount: wallet?.length ?? 0,
+        itemBuilder: (context, index) {
+          return _buildStockItem(wallet![index]!);
+        }
+    );
   }
 }

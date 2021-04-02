@@ -7,7 +7,7 @@ import 'package:stocial/StocialScaffold.dart';
 import 'package:stocial/collections.dart';
 import 'package:stocial/main.dart';
 
-import 'StocialTextField.dart';
+import 'widgets/stocial_text_field.dart';
 
 class SignUpScreen extends StatefulWidget {
   @override
