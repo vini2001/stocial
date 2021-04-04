@@ -124,7 +124,7 @@ class WalletState extends State<WalletScreen> {
       loading = false;
     });
   }
-  
+
   Widget _buildStockItem(Map<String, dynamic> stock) {
     if(!(stock['visible'] ?? false)) return Container();
     return Container(
