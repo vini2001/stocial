@@ -29,8 +29,9 @@ abstract class BaseState<T extends StatefulWidget> extends State<T> {
     ScaffoldMessenger.of(context).showSnackBar(buildSnackBar(message, seconds: seconds, label: label, onClose: onClose));
   }
 
-  void pop() {
-    Navigator.of(context).pop();
+  void pop([Object? response]) {
+    print(response);
+    Navigator.of(context).pop(response);
   }
 
 }

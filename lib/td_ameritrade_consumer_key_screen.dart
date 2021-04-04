@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:stocial/StocialScaffold.dart';
+import 'package:stocial/stocial_scaffold.dart';
 import 'package:stocial/base_state.dart';
 import 'package:stocial/constants/constants.dart';
 import 'package:stocial/widgets/stocial_text_field.dart';
@@ -64,7 +64,8 @@ class TDAmeritradeConsumerKeyState extends BaseState<TDAmeritradeConsumerKeyScre
                         flutterStorage.delete(key: td_ameritrade_access_token);
                         flutterStorage.delete(key: td_ameritrade_refresh_token);
                       }
-                      Navigator.of(context).pushReplacementNamed(Routes.tdAmeritrade, arguments: consumerKey);
+                      final imported = await Navigator.of(context).pushNamed(Routes.tdAmeritrade, arguments: consumerKey);
+                      pop(imported);
                     }
                   },
                   child: Text(AppStrings.next),

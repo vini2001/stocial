@@ -4,9 +4,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:stocial/StocialScaffold.dart';
+import 'package:stocial/stocial_scaffold.dart';
 import 'package:stocial/constants/constants.dart';
 import 'package:stocial/widgets/stocial_text_field.dart';
 import 'package:stocial/user.dart';
@@ -42,7 +43,7 @@ class WalletState extends State<WalletScreen> {
   void initState() {
     super.initState();
 
-    if(stocialUser.updatedCEI) getWallet();
+    getWallet();
   }
 
   @override
@@ -123,7 +124,7 @@ class WalletState extends State<WalletScreen> {
       loading = false;
     });
   }
-
+  
   Widget _buildStockItem(Map<String, dynamic> stock) {
     if(!(stock['visible'] ?? false)) return Container();
     return Container(
@@ -175,7 +176,7 @@ class WalletState extends State<WalletScreen> {
    setState(() {
      wallet?.forEach((element) {
        String code = element!['code'];
-       element['visible'] = code.contains(value!);
+       element['visible'] = code.toLowerCase().contains(value!.toLowerCase());
      });
    });
   }
@@ -219,24 +220,31 @@ class WalletState extends State<WalletScreen> {
   Future importCEI() async {
     stocialUser.cpfCEI = _cpfCEIController.text;
     stocialUser.passwordCEI = _passwordCEIController.text;
-    stocialUser.updatedCEI = false;
 
-    if(stocialUser.docRef == null) {
-      debugPrint('doc reff null');
-    }else{
-      DocumentReference docRef = stocialUser.docRef!;
-
-      final userData = stocialUser.toJson();
-      print(jsonEncode(userData));
-      await docRef.set(userData);
-
-      waitForCEIUpdate(docRef);
-    }
+    FlutterSecureStorage storage = FlutterSecureStorage();
+    storage.write(key: cei_user, value: stocialUser.cpfCEI);
+    storage.write(key: cei_password, value: stocialUser.passwordCEI);
 
     setState(() {
       showCEIImport = false;
       loading = true;
     });
+
+    final callable = FirebaseFunctions.instance.httpsCallable('importCei');
+
+    try {
+      final x = await callable({
+        "userId": stocialUser.uid,
+        "cpf_cei":  stocialUser.cpfCEI,
+        "password_cei": stocialUser.passwordCEI
+      });
+      print(x.data);
+      await getWallet();
+    } on FirebaseFunctionsException catch (e) {
+      print(e);
+    } catch (e) {
+      print(e);
+    }
   }
 
   Future refreshCEI() async {
@@ -255,18 +263,11 @@ class WalletState extends State<WalletScreen> {
 
   }
 
-  void waitForCEIUpdate(DocumentReference docRef) {
-    userStream = docRef.snapshots().listen((event) {
-      stocialUser.set(event);
-      if(stocialUser.updatedCEI) {
-        getWallet();
-        userStream!.cancel();
-      }
-    });
-  }
 
   Future<void> tdAmeritrade() async {
-    Navigator.of(context).pushNamed(Routes.tdAmeritradeKey);
+    final imported =  await Navigator.of(context).pushNamed(Routes.tdAmeritradeKey) as bool;
+    print("imported: $imported");
+    if(imported is bool && imported) getWallet();
   }
 
   getCurrencySymbol(final stock) {

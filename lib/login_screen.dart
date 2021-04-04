@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:stocial/StocialScaffold.dart';
+import 'package:stocial/stocial_scaffold.dart';
 import 'package:stocial/widgets/stocial_text_field.dart';
 import 'package:stocial/collections.dart';
 import 'package:stocial/main.dart';
