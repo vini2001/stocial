@@ -1,14 +1,15 @@
 
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:stocial/model/asset.dart';
 import 'package:stocial/stocial_scaffold.dart';
 import 'package:stocial/constants/constants.dart';
+import 'package:stocial/widgets/grouped_list.dart';
 import 'package:stocial/widgets/stocial_text_field.dart';
 import 'package:stocial/user.dart';
 
@@ -26,7 +27,8 @@ class WalletState extends State<WalletScreen> {
 
   FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-  List<Map<String, dynamic>?>? wallet;
+  Map<String, List<Asset>?>? wallet;
+  List<Asset>? assetsList;
 
   var _searchController = TextEditingController();
   StocialUser stocialUser = StocialUser();
@@ -51,64 +53,58 @@ class WalletState extends State<WalletScreen> {
     return StocialScaffold(
       body: Container(
         width: double.infinity,
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
+        child: Column(
+          children: [
+            if(loading) CircularProgressIndicator(),
+            if(showCEIImport) _buildCEIImport(),
+            Container(
+              margin: EdgeInsets.only(top: 30),
+              child: Text(
+                "${getTotalReais()}",
+                style: TextStyle(
+                    fontSize: 16
+                ),
+              ),
+            ),
+            Container(
+              margin: EdgeInsets.only(top: 20),
+              width: 300,
+              child: StocialTextField(
+                labelText: 'Search',
+                controller: _searchController,
+                onChanged: _search,
+              ),
+            ),
+            Expanded(
+                child: Container(
+                  margin: EdgeInsets.only(top: 0),
+                  width: MediaQuery.of(context).size.width - 20,
+                  decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black26, blurRadius: 10, spreadRadius: -3)
+                      ]
+                  ),
+                  child: _buildWalletList(wallet),
+                )
+            ),
+            Container(
+              height: 100,
+              width: double.infinity,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  if(loading) CircularProgressIndicator(),
-                  if(showCEIImport) _buildCEIImport(),
-                  Container(
-                    margin: EdgeInsets.only(top: 30),
-                    child: Text(
-                      "${getTotalReais()}",
-                      style: TextStyle(
-                          fontSize: 16
-                      ),
-                    ),
-                  ),
-                  Container(
-                    margin: EdgeInsets.only(top: 20),
-                    width: 300,
-                    child: StocialTextField(
-                      labelText: 'Search',
-                      controller: _searchController,
-                      onChanged: _search,
-                    ),
-                  ),
-                  Container(
-                    margin: EdgeInsets.only(top: 0),
-                    width: 400,
-                    height: 400,
-                    decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.all(Radius.circular(10)),
-                        boxShadow: [
-                          BoxShadow(color: Colors.black26, blurRadius: 10, spreadRadius: -3)
-                        ]
-                    ),
-                    child: wallet != null ? _buildWalletList(wallet) : Container(),
-                  )
+                  TextButton(onPressed: () {
+                    refreshCEI();
+                  }, child: Text('Importar do CEI')),
+                  if(isMobile()) TextButton(onPressed: () {
+                    tdAmeritrade();
+                  }, child: Text('Importar TD Ameritrade'))
                 ],
               ),
-              Container(
-                height: 100,
-                width: double.infinity,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    TextButton(onPressed: () {
-                      refreshCEI();
-                    }, child: Text('Importar do CEI')),
-                    if(isMobile()) TextButton(onPressed: () {
-                      tdAmeritrade();
-                    }, child: Text('Importar TD Ameritrade'))
-                  ],
-                ),
-              )
-            ],
-          ),
+            )
+          ],
         ),
       ),
     );
@@ -116,24 +112,42 @@ class WalletState extends State<WalletScreen> {
 
   Future getWallet() async {
     List<QueryDocumentSnapshot> docs = (await firestore.collection('assets').where('user_id', isEqualTo: stocialUser.uid).get()).docs;
+
     setState(() {
-      wallet = docs.map((snapshot) => snapshot.data()).toList();
-      wallet?.forEach((element) {
-        element!['visible'] = true;
+      assetsList = docs.map((snapshot) => Asset.fromJson(snapshot.data()!)).toList();
+      assetsList!.sort((a1, a2) {
+        return a1.code.compareTo(a2.code);
       });
-      loading = false;
+    });
+
+    Map<String, List<Asset>> walletGrouped = Map();
+    for(Asset asset in assetsList!) {
+      String type = asset.getAssetType();
+      if(!walletGrouped.containsKey(type)) {
+        walletGrouped[type] = [asset];
+      }else{
+        walletGrouped[type]!.add(asset);
+      }
+    }
+
+    setState(() {
+        wallet = walletGrouped;
     });
   }
 
-  Widget _buildStockItem(Map<String, dynamic> stock) {
-    if(!(stock['visible'] ?? false)) return Container();
+  void groupWallet(wallet) {
+
+  }
+
+  Widget _buildStockItem(Asset asset) {
+    if(!(asset.visible)) return Container();
     return Container(
       padding: EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            stock['code'],
+            asset.code,
             style: TextStyle(
                 decoration: TextDecoration.none,
                 fontSize: 18,
@@ -145,18 +159,18 @@ class WalletState extends State<WalletScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "${stock['quantity']}",
+                "${asset.quantity}",
                 style: TextStyle(
                     decoration: TextDecoration.none,
                     fontSize: 12,
                     color: Colors.black
                 ),
               ),
-              if(stock['averagePrice'] != null) Container(
-                child: Text('${(((((stock['price'] - stock['averagePrice']) / stock['averagePrice'])) * 100) as double).toStringAsFixed(2)} %'),
-              ),
+              // if(asset.averagePrice != null) Container(
+              //   child: Text('${(((((stock['price'] - stock['averagePrice']) / stock['averagePrice'])) * 100) as double).toStringAsFixed(2)} %'),
+              // ),
               Text(
-                "${getCurrencySymbol(stock)}${(stock['price'] * 1.0).toStringAsFixed(2)}",
+                "${asset.getCurrencySymbol()}${(asset.price * 1.0).toStringAsFixed(2)}",
                 style: TextStyle(
                     decoration: TextDecoration.none,
                     fontSize: 12,
@@ -174,10 +188,10 @@ class WalletState extends State<WalletScreen> {
 
   void _search(String? value) {
    setState(() {
-     wallet?.forEach((element) {
-       String code = element!['code'];
-       element['visible'] = code.toLowerCase().contains(value!.toLowerCase());
-     });
+     // wallet?.forEach((asset) {
+     //   String code = asset.code;
+     //   asset.visible = code.toLowerCase().contains(value!.toLowerCase());
+     // });
    });
   }
 
@@ -270,28 +284,20 @@ class WalletState extends State<WalletScreen> {
     if(imported is bool && imported) getWallet();
   }
 
-  getCurrencySymbol(final stock) {
-    if(stock['currency'] != null) {
-      if(stock['currency'] == 'American Dollars') {
-        return 'USD ';
-      }
-    }
-    return 'R\$ ';
-  }
-
   getTotalReais() {
     var totalReais = 0.0;
     var totalDolars = 0.0;
-    if(wallet != null) {
-      for(var stock in wallet!) {
-        if(stock!['currency'] == null) {
-          totalReais += (stock['quantity']) * (stock['price']);
+    
+    if(assetsList != null) {
+      for(Asset asset in assetsList!) {
+        if(asset.currency == 'BRL') {
+          totalReais += (asset.quantity) * (asset.price);
         }else{
-          totalDolars += (stock['quantity']) * (stock['price']);
+          totalDolars += (asset.quantity) * (asset.price);
         }
       }
     }
-    return "Total Ações BR: R\$ $totalReais \nTotal Ações US: USD $totalDolars";
+    return "Total Ações BR: R\$ ${totalReais.toStringAsFixed(2)} \nTotal Ações US: USD ${totalDolars.toStringAsFixed(2)}";
   }
 
   bool isMobile() {
@@ -302,12 +308,30 @@ class WalletState extends State<WalletScreen> {
     }
   }
 
-  _buildWalletList(List<Map<String, dynamic>?>? wallet) {
-    return ListView.builder(
-        itemCount: wallet?.length ?? 0,
-        itemBuilder: (context, index) {
-          return _buildStockItem(wallet![index]!);
-        }
+  _buildWalletList(Map<String, List<Asset>?>? wallet) {
+    if(wallet == null) return Container();
+
+    return StocialGroupedList(
+        groupsNames: wallet.entries.map((e) => e.key).toList(),
+        groupSize: (String groupIndex) => wallet[groupIndex]?.length ?? 0,
+        columns: ['Ticker', 'Quantidade'],
+        valueFor: ({required int columnIndex, required String groupKey, required int itemIndex}) {
+          Asset? asset = wallet[groupKey]?[itemIndex];
+          if(asset != null) {
+            switch(columnIndex) {
+              case 0: return asset.code;
+              case 1: return asset.quantity.toString();
+            }
+          }
+          return "";
+        },
     );
+    return Container();
+    // return ListView.builder(
+    //     itemCount: wallet?.length ?? 0,
+    //     itemBuilder: (context, index) {
+    //       return _buildStockItem(wallet![index]!);
+    //     }
+    // );
   }
 }
