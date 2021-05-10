@@ -7,8 +7,9 @@ class StocialGroupedList extends StatefulWidget {
   final int Function(String groupIndex) groupSize;
   final List<String> columns;
   final String Function({required String groupKey, required int itemIndex, required int columnIndex}) valueFor;
+  final bool Function({required String groupKey, required int itemIndex})? isVisible;
 
-  StocialGroupedList({required this.groupsNames, required this.groupSize, required this.columns, required this.valueFor});
+  StocialGroupedList({required this.groupsNames, required this.groupSize, required this.columns, required this.valueFor, this.isVisible});
 
   @override
   State<StatefulWidget> createState() {
@@ -117,6 +118,7 @@ class StocialGroupedListState extends State<StocialGroupedList> {
                   child: Container(
                     width: double.infinity,
                     padding: EdgeInsets.all(10),
+                    margin: EdgeInsets.only(top: 10),
                     decoration: BoxDecoration(
                         color: Colors.lightBlue,
                         borderRadius: BorderRadius.vertical(top: Radius.circular(10))
@@ -137,6 +139,10 @@ class StocialGroupedListState extends State<StocialGroupedList> {
                       return widget.valueFor(groupKey: widget.groupsNames[groupIndex], columnIndex: columnIndex, itemIndex: itemIndex);
                     },
                     columns: widget.columns.length,
+                    isVisible: (itemIndex) {
+                      if(widget.isVisible == null) return true;
+                      return widget.isVisible!(groupKey: widget.groupsNames[groupIndex], itemIndex: itemIndex);
+                    },
                   ),
                 )
               ],
@@ -195,8 +201,9 @@ class StocialList extends StatelessWidget {
 
   final int lenght, columns;
   final String Function(int index, int columnIndex) valueFor;
+  final bool Function(int itemIndex)? isVisible;
 
-  StocialList({required this.lenght, required this.valueFor, required this.columns});
+  StocialList({required this.lenght, required this.valueFor, required this.columns, this.isVisible});
 
   @override
   Widget build(BuildContext context) {
@@ -209,7 +216,7 @@ class StocialList extends StatelessWidget {
             color: index % 2 == 0 ? Colors.blue[50] : Colors.white,
             child: Column(
               children: [
-                Container(
+                if(isVisible == null || isVisible!(index)) Container(
                   padding: EdgeInsets.all(15),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,

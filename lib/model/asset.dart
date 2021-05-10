@@ -34,4 +34,9 @@ class Asset {
     }
   }
 
+  bool contains(String searchQuery) {
+    searchQuery = searchQuery.toLowerCase();
+    return code.toLowerCase().contains(searchQuery) || company.toLowerCase().contains(searchQuery);
+  }
+
 }

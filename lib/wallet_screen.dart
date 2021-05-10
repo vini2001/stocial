@@ -14,6 +14,7 @@ import 'package:stocial/widgets/stocial_text_field.dart';
 import 'package:stocial/user.dart';
 
 import 'constants/routes.dart';
+import 'model/wallet.dart';
 
 class WalletScreen extends StatefulWidget {
   @override
@@ -27,7 +28,7 @@ class WalletState extends State<WalletScreen> {
 
   FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-  Map<String, List<Asset>?>? wallet;
+  Wallet? wallet;
   List<Asset>? assetsList;
 
   var _searchController = TextEditingController();
@@ -41,10 +42,12 @@ class WalletState extends State<WalletScreen> {
   bool showCEIImport = false;
   bool loading = false;
 
+  String? _searchQuery;
+
   @override
   void initState() {
     super.initState();
-
+    getQuotes();
     getWallet();
   }
 
@@ -111,28 +114,16 @@ class WalletState extends State<WalletScreen> {
   }
 
   Future getWallet() async {
-    List<QueryDocumentSnapshot> docs = (await firestore.collection('assets').where('user_id', isEqualTo: stocialUser.uid).get()).docs;
+    List<QueryDocumentSnapshot> docs = (await firestore.collection('assets').where('user_id', isEqualTo: stocialUser.uid).orderBy('code').get()).docs;
 
     setState(() {
       assetsList = docs.map((snapshot) => Asset.fromJson(snapshot.data()!)).toList();
-      assetsList!.sort((a1, a2) {
-        return a1.code.compareTo(a2.code);
-      });
-    });
-
-    Map<String, List<Asset>> walletGrouped = Map();
-    for(Asset asset in assetsList!) {
-      String type = asset.getAssetType();
-      if(!walletGrouped.containsKey(type)) {
-        walletGrouped[type] = [asset];
-      }else{
-        walletGrouped[type]!.add(asset);
+      if(assetsList != null) {
+        wallet = Wallet(assetsList!);
       }
-    }
-
-    setState(() {
-        wallet = walletGrouped;
     });
+
+    await updateQuotes();
   }
 
   void groupWallet(wallet) {
@@ -188,10 +179,7 @@ class WalletState extends State<WalletScreen> {
 
   void _search(String? value) {
    setState(() {
-     // wallet?.forEach((asset) {
-     //   String code = asset.code;
-     //   asset.visible = code.toLowerCase().contains(value!.toLowerCase());
-     // });
+     _searchQuery = value;
    });
   }
 
@@ -261,6 +249,21 @@ class WalletState extends State<WalletScreen> {
     }
   }
 
+  // call the cloud function to assure we have the latest prices for the quotes
+  Future getQuotes() async {
+    print("getQuotes: loading...");
+    final callable = FirebaseFunctions.instance.httpsCallable('getQuotes');
+    try {
+      final x = await callable({});
+      print("getQuotes: ${x.data}");
+      updateQuotes();
+    } on FirebaseFunctionsException catch (e) {
+      print(e);
+    } catch (e) {
+      print(e);
+    }
+  }
+
   Future refreshCEI() async {
     setState(() {
       showCEIImport = true;
@@ -275,6 +278,17 @@ class WalletState extends State<WalletScreen> {
       _passwordCEIController.text = pass;
     }
 
+  }
+
+  Future<void> updateQuotes() async {
+    print("toUpdateQuotes");
+
+    for(Asset asset in wallet!.getAssetsList()) {
+      List<QueryDocumentSnapshot> docs = (await firestore.collection('tickers').where('symbol', isEqualTo: asset.code).get()).docs;
+      if(docs.length != 0) {
+        // print(docs[0].data());
+      }
+    }
   }
 
 
@@ -308,15 +322,15 @@ class WalletState extends State<WalletScreen> {
     }
   }
 
-  _buildWalletList(Map<String, List<Asset>?>? wallet) {
+  _buildWalletList(Wallet? wallet) {
     if(wallet == null) return Container();
 
     return StocialGroupedList(
-        groupsNames: wallet.entries.map((e) => e.key).toList(),
-        groupSize: (String groupIndex) => wallet[groupIndex]?.length ?? 0,
+        groupsNames: wallet.getGroupsNames() ?? [],
+        groupSize: (String groupIndex) => wallet.getGroupSize(groupIndex) ?? 0,
         columns: ['Ticker', 'Quantidade'],
         valueFor: ({required int columnIndex, required String groupKey, required int itemIndex}) {
-          Asset? asset = wallet[groupKey]?[itemIndex];
+          Asset? asset = wallet.getAsset(groupKey, itemIndex);
           if(asset != null) {
             switch(columnIndex) {
               case 0: return asset.code;
@@ -325,6 +339,9 @@ class WalletState extends State<WalletScreen> {
           }
           return "";
         },
+        isVisible: ({required String groupKey, required int itemIndex}) {
+          return wallet.getAsset(groupKey, itemIndex)?.contains(_searchQuery ?? '') ?? true;
+        }
     );
     return Container();
     // return ListView.builder(
