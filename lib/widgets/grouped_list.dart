@@ -4,12 +4,13 @@ import 'package:flutter/material.dart';
 class StocialGroupedList extends StatefulWidget {
 
   final List<String> groupsNames;
+  final List<String>? groupsInfo;
   final int Function(String groupIndex) groupSize;
   final List<String> columns;
   final String Function({required String groupKey, required int itemIndex, required int columnIndex}) valueFor;
   final bool Function({required String groupKey, required int itemIndex})? isVisible;
 
-  StocialGroupedList({required this.groupsNames, required this.groupSize, required this.columns, required this.valueFor, this.isVisible});
+  StocialGroupedList({required this.groupsNames, required this.groupSize, required this.columns, required this.valueFor, this.isVisible, this.groupsInfo});
 
   @override
   State<StatefulWidget> createState() {
@@ -74,11 +75,15 @@ class StocialGroupedListState extends State<StocialGroupedList> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             for(String column in widget.columns) ... [
-                              Text(
-                                column,
-                                style: TextStyle(
-                                  color: Colors.white
-                                ),
+                              Flexible(
+                                fit: FlexFit.tight,
+                                  child: Text(
+                                    column,
+                                    style: TextStyle(
+                                        color: Colors.white
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  )
                               )
                             ]
                           ],
@@ -123,11 +128,29 @@ class StocialGroupedListState extends State<StocialGroupedList> {
                         color: Colors.lightBlue,
                         borderRadius: BorderRadius.vertical(top: Radius.circular(10))
                     ),
-                    child: Text(
-                      widget.groupsNames[groupIndex],
-                      style: TextStyle(
-                          color: Colors.white
-                      ),
+                    child: Row(
+                      children: [
+                        Text(
+                          widget.groupsNames[groupIndex],
+                          style: TextStyle(
+                              color: Colors.white
+                          ),
+                        ),
+                        if(widget.groupsInfo != null )Container(
+                          margin: EdgeInsets.only(left: 20),
+                          padding: EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(20)),
+                            color: Colors.white24
+                          ),
+                          child: Text(
+                            widget.groupsInfo![groupIndex],
+                            style: TextStyle(
+                                color: Colors.white
+                            ),
+                          ),
+                        )
+                      ],
                     ),
                   ),
                   color: Colors.blue,
@@ -189,7 +212,7 @@ class StocialGroupedListState extends State<StocialGroupedList> {
     for(int i = 0; i < widget.groupsNames.length; i++) {
       final iKey = widget.groupsNames[i];
       if(iKey == groupKey) break;
-      position += 37;
+      position += 60;
       position += widget.groupSize(iKey) * 47;
 
     }
@@ -222,8 +245,13 @@ class StocialList extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       for(int i = 0; i < columns; i++) ... [
-                        Text(
-                            valueFor(index, i)
+                        Flexible(
+                          fit: FlexFit.tight,
+                          flex: 1,
+                          child: Text(
+                              valueFor(index, i),
+                            textAlign: TextAlign.center,
+                          ),
                         )
                       ]
                     ],

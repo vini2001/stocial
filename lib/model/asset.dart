@@ -6,7 +6,7 @@ part 'asset.g.dart';
 class Asset {
   final String code;
   final String company;
-  final double price;
+  double price;
   final double quantity;
 
   @JsonKey(defaultValue: "BRL")
@@ -29,8 +29,8 @@ class Asset {
 
   String getAssetType() {
     switch(currency) {
-      case 'American Dollars': return 'Ações Americanas';
-      default: return 'Ações';
+      case 'American Dollars': return 'US Stocks';
+      default: return 'Brazil Stocks';
     }
   }
 

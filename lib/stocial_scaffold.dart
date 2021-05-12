@@ -5,8 +5,9 @@ class StocialScaffold extends StatefulWidget{
 
   final Widget body;
   final String title;
+  Widget? sideWidget;
 
-  StocialScaffold({required this.body, this.title = 'Stocial'});
+  StocialScaffold({required this.body, this.title = 'Stocial', this.sideWidget});
 
   @override
   State<StatefulWidget> createState() => ScaffoldState();
@@ -17,7 +18,16 @@ class ScaffoldState extends State<StocialScaffold> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Stack(
+          children: [
+            Container(
+              alignment: Alignment.center,
+              width: double.infinity,
+              child: Text(widget.title),
+            ),
+            if(widget.sideWidget != null) widget.sideWidget!
+          ],
+        ),
       ),
       body: widget.body,
     );

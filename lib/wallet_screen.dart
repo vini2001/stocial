@@ -7,6 +7,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:stocial/model/asset.dart';
+import 'package:stocial/model/ticker.dart';
 import 'package:stocial/stocial_scaffold.dart';
 import 'package:stocial/constants/constants.dart';
 import 'package:stocial/widgets/grouped_list.dart';
@@ -14,6 +15,7 @@ import 'package:stocial/widgets/stocial_text_field.dart';
 import 'package:stocial/user.dart';
 
 import 'constants/routes.dart';
+import 'model/currency_conversion.dart';
 import 'model/wallet.dart';
 
 class WalletScreen extends StatefulWidget {
@@ -61,15 +63,6 @@ class WalletState extends State<WalletScreen> {
             if(loading) CircularProgressIndicator(),
             if(showCEIImport) _buildCEIImport(),
             Container(
-              margin: EdgeInsets.only(top: 30),
-              child: Text(
-                "${getTotalReais()}",
-                style: TextStyle(
-                    fontSize: 16
-                ),
-              ),
-            ),
-            Container(
               margin: EdgeInsets.only(top: 20),
               width: 300,
               child: StocialTextField(
@@ -100,16 +93,17 @@ class WalletState extends State<WalletScreen> {
                 children: [
                   TextButton(onPressed: () {
                     refreshCEI();
-                  }, child: Text('Importar do CEI')),
+                  }, child: Text('Import from CEI')),
                   if(isMobile()) TextButton(onPressed: () {
                     tdAmeritrade();
-                  }, child: Text('Importar TD Ameritrade'))
+                  }, child: Text('Import from TD Ameritrade'))
                 ],
               ),
             )
           ],
         ),
       ),
+      sideWidget: _getUsdBrlWidget()
     );
   }
 
@@ -123,7 +117,8 @@ class WalletState extends State<WalletScreen> {
       }
     });
 
-    await updateQuotes();
+    updateCurrencies();
+    updateQuotes();
   }
 
   void groupWallet(wallet) {
@@ -280,15 +275,30 @@ class WalletState extends State<WalletScreen> {
 
   }
 
+  Future<void> updateCurrencies() async {
+    List<QueryDocumentSnapshot> docs = (await firestore.collection('currencies').get()).docs;
+    for(QueryDocumentSnapshot snapshot in docs) {
+      if(snapshot.data() != null) {
+        final ticker = CurrencyConversion.fromJson(snapshot.data()!);
+        wallet?.addCurrencyConversion(ticker);
+      }
+    }
+  }
+
   Future<void> updateQuotes() async {
     print("toUpdateQuotes");
 
     for(Asset asset in wallet!.getAssetsList()) {
       List<QueryDocumentSnapshot> docs = (await firestore.collection('tickers').where('symbol', isEqualTo: asset.code).get()).docs;
-      if(docs.length != 0) {
-        // print(docs[0].data());
+      for(QueryDocumentSnapshot snapshot in docs) {
+        if(snapshot.data() != null) {
+          final ticker = Ticker.fromJson(snapshot.data()!);
+          wallet?.updateTicker(ticker);
+        }
       }
     }
+
+    setState(() {});
   }
 
 
@@ -296,22 +306,6 @@ class WalletState extends State<WalletScreen> {
     final imported =  await Navigator.of(context).pushNamed(Routes.tdAmeritradeKey) as bool;
     print("imported: $imported");
     if(imported is bool && imported) getWallet();
-  }
-
-  getTotalReais() {
-    var totalReais = 0.0;
-    var totalDolars = 0.0;
-    
-    if(assetsList != null) {
-      for(Asset asset in assetsList!) {
-        if(asset.currency == 'BRL') {
-          totalReais += (asset.quantity) * (asset.price);
-        }else{
-          totalDolars += (asset.quantity) * (asset.price);
-        }
-      }
-    }
-    return "Total Ações BR: R\$ ${totalReais.toStringAsFixed(2)} \nTotal Ações US: USD ${totalDolars.toStringAsFixed(2)}";
   }
 
   bool isMobile() {
@@ -327,14 +321,17 @@ class WalletState extends State<WalletScreen> {
 
     return StocialGroupedList(
         groupsNames: wallet.getGroupsNames() ?? [],
+        groupsInfo: wallet.getGroupsTotals(),
         groupSize: (String groupIndex) => wallet.getGroupSize(groupIndex) ?? 0,
-        columns: ['Ticker', 'Quantidade'],
+        columns: ['Ticker', 'Price', 'Qtt', 'Total'],
         valueFor: ({required int columnIndex, required String groupKey, required int itemIndex}) {
           Asset? asset = wallet.getAsset(groupKey, itemIndex);
           if(asset != null) {
             switch(columnIndex) {
               case 0: return asset.code;
-              case 1: return asset.quantity.toString();
+              case 1: return asset.price.toStringAsFixed(2);
+              case 2: return asset.quantity.toString();
+              case 3: return (asset.quantity * asset.price).toStringAsFixed(2);
             }
           }
           return "";
@@ -343,12 +340,26 @@ class WalletState extends State<WalletScreen> {
           return wallet.getAsset(groupKey, itemIndex)?.contains(_searchQuery ?? '') ?? true;
         }
     );
-    return Container();
-    // return ListView.builder(
-    //     itemCount: wallet?.length ?? 0,
-    //     itemBuilder: (context, index) {
-    //       return _buildStockItem(wallet![index]!);
-    //     }
-    // );
+  }
+
+  _getUsdBrlWidget() {
+    if(wallet?.usdBrlExchangeRate == null) return null;
+
+      return Container(
+        padding: EdgeInsets.symmetric(vertical: 3),
+        child: Container(
+          decoration: BoxDecoration(
+              color: Colors.black26,
+              borderRadius: BorderRadius.all(Radius.circular(4))
+          ),
+          padding: EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+          child: Text(
+            'USD/BRL: ${wallet!.usdBrlExchangeRate}',
+            style: TextStyle(
+                fontSize: 12
+            ),
+          ),
+        ),
+      );
   }
 }
