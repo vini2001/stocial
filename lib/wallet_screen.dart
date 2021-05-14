@@ -66,6 +66,7 @@ class WalletState extends State<WalletScreen> {
               margin: EdgeInsets.only(top: 20),
               width: 300,
               child: StocialTextField(
+                textFieldKey: const Key('wallet-search-text-field'),
                 labelText: 'Search',
                 controller: _searchController,
                 onChanged: _search,

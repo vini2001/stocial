@@ -8,8 +8,9 @@ class StocialTextField extends StatelessWidget{
   final String labelText;
   final bool? obscureText;
   final Function(String?)? onChanged;
+  final Key? textFieldKey;
 
-  StocialTextField({this.controller, required this.labelText, this.keyboardType, this.obscureText, this.onChanged});
+  StocialTextField({this.controller, required this.labelText, this.keyboardType, this.obscureText, this.onChanged, this.textFieldKey});
 
   @override
   Widget build(BuildContext context) {
@@ -18,6 +19,7 @@ class StocialTextField extends StatelessWidget{
       height: 40,
       child: TextFormField(
         controller: controller,
+        key: textFieldKey,
         keyboardType: keyboardType,
         obscureText: obscureText ?? false,
         onChanged: onChanged,

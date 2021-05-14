@@ -242,6 +242,7 @@ class StocialList extends StatelessWidget {
                 if(isVisible == null || isVisible!(index)) Container(
                   padding: EdgeInsets.all(15),
                   child: Row(
+                    key: const Key('stocial-list-row'),
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       for(int i = 0; i < columns; i++) ... [
