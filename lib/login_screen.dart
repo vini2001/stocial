@@ -49,33 +49,57 @@ class LoginState extends BaseState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Stocial'),),
-      body: Container(
-        color: Colors.white,
-        width: double.infinity,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              padding: EdgeInsets.all(30),
-              margin: EdgeInsets.only(top: 20),
-              width: 400,
-              height: 400,
-              decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.all(Radius.circular(10)),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black26, blurRadius: 10, spreadRadius: -3)
-                  ]
+      body: Stack(
+        children: [
+          Container(
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                stops: [
+                  0, 0.15, 0.70, 1
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: <Color>[
+                  Color(0xFF2891E5),
+                  Colors.white,
+                  Colors.white,
+                  Color(0xFF2891E5),
+                ], // red to yellow
+                tileMode: TileMode.clamp, // repeats the gradient over the canvas
               ),
+            ),
+          ),
+          Container(
+            alignment: Alignment.center,
+            child: Container(
+              padding: EdgeInsets.only(left: 40, right: 40, bottom: 90),
+              // color: Colors.white,
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Login',
-                      style: TextStyle(
-                        color: Colors.blueAccent,
-                        decoration: TextDecoration.none,
-                        fontSize: 20
-                      )
+                  Container(
+                    alignment: Alignment.centerLeft,
+                    child: Text('Welcome to Stocial!',
+                        style: TextStyle(
+                            color: Colors.blueAccent,
+                            decoration: TextDecoration.none,
+                            fontSize: 24
+                        )
+                    ),
+                  ),
+                  Container(
+                    margin: EdgeInsets.only(top: 5),
+                    alignment: Alignment.centerLeft,
+                    child: Text('Your investment buddy',
+                        style: TextStyle(
+                            color: Colors.blueAccent,
+                            decoration: TextDecoration.none,
+                            fontSize: 14
+                        )
+                    ),
                   ),
                   Container(height: 40),
                   StocialTextField(
@@ -89,20 +113,25 @@ class LoginState extends BaseState<LoginScreen> {
                     labelText: 'Senha',
                     controller: passwordController,
                   ),
-                  Container(height: 40),
-                  ElevatedButton(
-                      onPressed: () {
-                        login();
-                      }, child: Text("Login")),
+                  Container(height: 10),
+                  Container(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                        onPressed: () {
+                          login();
+                        },
+                        child: Text("Login")
+                    ),
+                  ),
                   TextButton(
                       onPressed: () {
                         Navigator.of(context).push(MaterialPageRoute(builder: (context) => SignUpScreen()));
-                  }, child: Text('Cadastrar'))
+                      }, child: Text('Sign Up'))
                 ],
               ),
-            )
-          ],
-        ),
+            ),
+          )
+        ],
       ),
     );
   }

@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -33,37 +32,61 @@ class SignUpState extends BaseState<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Stocial'),),
-      body: Container(
-        color: Colors.white,
-        width: double.infinity,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              padding: EdgeInsets.all(30),
-              margin: EdgeInsets.only(top: 20),
-              width: 400,
-              height: 400,
-              decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.all(Radius.circular(10)),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black26, blurRadius: 10, spreadRadius: -3)
-                  ]
+      body: Stack(
+        children: [
+          Container(
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                stops: [
+                  0, 0.3, 0.70, 1
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: <Color>[
+                  Color(0xFF2891E5),
+                  Colors.white,
+                  Colors.white,
+                  Color(0xFF2891E5),
+                ], // red to yellow
+                tileMode: TileMode.clamp, // repeats the gradient over the canvas
               ),
+            ),
+          ),
+          Container(
+            alignment: Alignment.topCenter,
+            child: Container(
+              padding: EdgeInsets.only(left: 40, right: 40, top: 200),
+              // color: Colors.white,
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Cadastrar',
-                      style: TextStyle(
-                        color: Colors.blueAccent,
-                        decoration: TextDecoration.none,
-                        fontSize: 20
-                      )
+                  Container(
+                    alignment: Alignment.centerLeft,
+                    child: Text('Sign up',
+                        style: TextStyle(
+                            color: Colors.blueAccent,
+                            decoration: TextDecoration.none,
+                            fontSize: 24
+                        )
+                    ),
+                  ),
+                  Container(
+                    margin: EdgeInsets.only(top: 5),
+                    alignment: Alignment.centerLeft,
+                    child: Text('And start making your life easier',
+                        style: TextStyle(
+                            color: Colors.blueAccent,
+                            decoration: TextDecoration.none,
+                            fontSize: 14
+                        )
+                    ),
                   ),
                   Container(height: 40),
                   StocialTextField(
-                    labelText: 'Nome',
+                    labelText: 'Name',
                     keyboardType: TextInputType.text,
                     controller: nameController,
                   ),
@@ -75,19 +98,31 @@ class SignUpState extends BaseState<SignUpScreen> {
                   StocialTextField(
                     keyboardType: TextInputType.text,
                     obscureText: true,
-                    labelText: 'Senha',
+                    labelText: 'Password',
                     controller: passwordController,
                   ),
                   Container(height: 40),
-                  ElevatedButton(
-                      onPressed: () {
-                        cadastrar();
-                      }, child: Text("Cadastrar")),
+                  Container(height: 10),
+                  Container(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                        onPressed: () {
+                          cadastrar();
+                        }, child: Text("Submit")),
+                  ),
                 ],
               ),
-            )
-          ],
-        ),
+            ),
+          ),
+          AppBar(
+            elevation: 0,
+            backgroundColor: Colors.transparent,
+            title: Container(
+              alignment: Alignment.centerLeft,
+              child: Text('Stocial'),
+            ),
+          ),
+        ],
       ),
     );
   }

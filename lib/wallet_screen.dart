@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:stocial/base_state.dart';
@@ -16,6 +17,7 @@ import 'package:stocial/widgets/stocial_text_field.dart';
 import 'package:stocial/user.dart';
 
 import 'constants/routes.dart';
+import 'main.dart';
 import 'model/currency_conversion.dart';
 import 'model/wallet.dart';
 
@@ -61,7 +63,20 @@ class WalletState extends BaseState<WalletScreen> {
         width: double.infinity,
         child: Column(
           children: [
-            if(loading) CircularProgressIndicator(),
+            Container(
+              width: double.infinity,
+              color: Colors.blue,
+              padding: EdgeInsets.only(top: 0, right: 8, bottom: 8, left: 8),
+              child: Row(
+                children: [
+                  _getUsdBrlWidget()
+                ],
+              ),
+            ),
+            if(loading) Padding(
+              padding: EdgeInsets.only(top: 20),
+              child: CircularProgressIndicator(),
+            ),
             if(showCEIImport) _buildCEIImport(),
             Container(
               margin: EdgeInsets.only(top: 20),
@@ -87,33 +102,66 @@ class WalletState extends BaseState<WalletScreen> {
                   child: _buildWalletList(wallet),
                 )
             ),
-            Container(
-              height: 100,
-              width: double.infinity,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  TextButton(onPressed: () {
-                    refreshCEI();
-                  }, child: Text('Import from CEI')),
-                  if(isMobile()) TextButton(onPressed: () {
-                    tdAmeritrade();
-                  }, child: Text('Import from TD Ameritrade'))
-                ],
-              ),
-            )
           ],
         ),
       ),
       appBar: AppBar(
-        title: Stack(
+        elevation: 0,
+        title: Container(
+          margin: EdgeInsets.only(left: 40),
+          alignment: Alignment.center,
+          width: double.infinity,
+          child: Text('Stocial'),
+        ),
+        leading: null,
+        actions: [
+          Builder(builder: (context) {
+            return IconButton(
+              icon: Icon(Icons.person),
+              onPressed: () => Scaffold.of(context).openEndDrawer(),
+            );
+          })
+        ],
+      ),
+      endDrawer: Drawer(
+        child: Column(
           children: [
-            Container(
-              alignment: Alignment.center,
-              width: double.infinity,
-              child: Text('Stocial'),
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor
+              ),
+              child: Container(
+                width: double.infinity,
+                alignment: Alignment.bottomLeft,
+                padding: EdgeInsets.only(bottom: 20),
+                child: Text(
+                  'Stocial',
+                  style: TextStyle(
+                    fontSize: 24,
+                    color: Colors.white
+                  ),
+                ),
+              ),
             ),
-            _getUsdBrlWidget()
+            ListTile(
+              leading: Icon(Icons.add),
+              title: Text('Import from TD Ameritrade'),
+              onTap: tdAmeritrade,
+            ),
+            ListTile(
+              leading: Icon(Icons.add),
+              title: Text('Import from CEI'),
+              onTap: () {
+                refreshCEI();
+                pop();
+              },
+            ),
+            Divider(),
+            ListTile(
+              leading: Icon(Icons.exit_to_app),
+              title: Text('Logout'),
+              onTap: _logout,
+            ),
           ],
         ),
       ),
@@ -128,6 +176,7 @@ class WalletState extends BaseState<WalletScreen> {
       if(assetsList != null) {
         wallet = Wallet(assetsList!);
       }
+      loading = false;
     });
 
     updateCurrencies();
@@ -342,9 +391,9 @@ class WalletState extends BaseState<WalletScreen> {
           if(asset != null) {
             switch(columnIndex) {
               case 0: return asset.code;
-              case 1: return asset.price.toStringAsFixed(2);
+              case 1: return "${wallet.getCurrencySymbol(asset.currency)} ${(asset.price * 1.0).toStringAsFixed(2)}";
               case 2: return asset.quantity.toString();
-              case 3: return (asset.quantity * asset.price).toStringAsFixed(2);
+              case 3: return "${wallet.getCurrencySymbol(asset.currency)} ${(asset.quantity * asset.price).toStringAsFixed(2)}";
             }
           }
           return "";
@@ -357,22 +406,26 @@ class WalletState extends BaseState<WalletScreen> {
 
   _getUsdBrlWidget() {
     if(wallet?.usdBrlExchangeRate == null) return Container();
-
-      return Container(
-        padding: EdgeInsets.symmetric(vertical: 3),
-        child: Container(
-          decoration: BoxDecoration(
-              color: Colors.black26,
-              borderRadius: BorderRadius.all(Radius.circular(4))
-          ),
-          padding: EdgeInsets.symmetric(vertical: 4, horizontal: 10),
-          child: Text(
-            'USD/BRL: ${wallet!.usdBrlExchangeRate}',
-            style: TextStyle(
-                fontSize: 12
-            ),
-          ),
+    return Container(
+      decoration: BoxDecoration(
+          color: Colors.black26,
+          borderRadius: BorderRadius.all(Radius.circular(4))
+      ),
+      padding: EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+      child: Text(
+        'USD/BRL: ${wallet!.usdBrlExchangeRate}',
+        style: TextStyle(
+            fontSize: 12,
+            color: Colors.white
         ),
-      );
+      ),
+    );
+  }
+
+  Future<void> _logout() async {
+    if(auth != null) {
+      await auth!.signOut();
+      Navigator.of(context).pushReplacementNamed(Routes.login);
+    }
   }
 }
