@@ -11,5 +11,4 @@ class Finders {
   final listRowFinder = find.byKey(const Key('stocial-list-row'));
   final brazilStocks = find.text('Brazil Stocks');
   final usStocks = find.text('US Stocks');
-
 }

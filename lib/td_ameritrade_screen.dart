@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:stocial/stocial_scaffold.dart';
+
 import 'package:stocial/collections.dart';
 import 'package:stocial/main.dart';
 import 'package:stocial/user.dart';
@@ -43,8 +43,8 @@ class TDAmeritradeState extends BaseState<TDAmeritradeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return StocialScaffold(
-      title: 'Stocial',
+    return Scaffold(
+      appBar: AppBar(title: Text('Stocial'),),
       body: Container(
         child: !showWebView ? StocialLoading(label: AppStrings.loading) : WebView(
           initialUrl: Urls.tdAmeritrade.authenticate(consumerKey: widget.consumerKey),

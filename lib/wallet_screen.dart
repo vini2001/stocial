@@ -6,9 +6,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:stocial/base_state.dart';
 import 'package:stocial/model/asset.dart';
 import 'package:stocial/model/ticker.dart';
-import 'package:stocial/stocial_scaffold.dart';
+
 import 'package:stocial/constants/constants.dart';
 import 'package:stocial/widgets/grouped_list.dart';
 import 'package:stocial/widgets/stocial_text_field.dart';
@@ -26,7 +27,7 @@ class WalletScreen extends StatefulWidget {
 
 }
 
-class WalletState extends State<WalletScreen> {
+class WalletState extends BaseState<WalletScreen> {
 
   FirebaseFirestore firestore = FirebaseFirestore.instance;
 
@@ -55,7 +56,7 @@ class WalletState extends State<WalletScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return StocialScaffold(
+    return Scaffold(
       body: Container(
         width: double.infinity,
         child: Column(
@@ -104,7 +105,18 @@ class WalletState extends State<WalletScreen> {
           ],
         ),
       ),
-      sideWidget: _getUsdBrlWidget()
+      appBar: AppBar(
+        title: Stack(
+          children: [
+            Container(
+              alignment: Alignment.center,
+              width: double.infinity,
+              child: Text('Stocial'),
+            ),
+            _getUsdBrlWidget()
+          ],
+        ),
+      ),
     );
   }
 
@@ -344,7 +356,7 @@ class WalletState extends State<WalletScreen> {
   }
 
   _getUsdBrlWidget() {
-    if(wallet?.usdBrlExchangeRate == null) return null;
+    if(wallet?.usdBrlExchangeRate == null) return Container();
 
       return Container(
         padding: EdgeInsets.symmetric(vertical: 3),

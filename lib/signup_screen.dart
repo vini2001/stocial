@@ -3,10 +3,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:stocial/stocial_scaffold.dart';
+
 import 'package:stocial/collections.dart';
 import 'package:stocial/main.dart';
 
+import 'base_state.dart';
 import 'widgets/stocial_text_field.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -17,7 +18,7 @@ class SignUpScreen extends StatefulWidget {
 
 }
 
-class SignUpState extends State<SignUpScreen> {
+class SignUpState extends BaseState<SignUpScreen> {
 
 
   TextEditingController emailController = TextEditingController();
@@ -31,8 +32,8 @@ class SignUpState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return StocialScaffold(
-      title: 'Stocial',
+    return Scaffold(
+      appBar: AppBar(title: Text('Stocial'),),
       body: Container(
         color: Colors.white,
         width: double.infinity,
