@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:stocial/constants/colors.dart';
+import 'package:stocial/widgets/stocial_button.dart';
 import 'package:stocial/widgets/stocial_text_field.dart';
 import 'package:stocial/collections.dart';
 import 'package:stocial/main.dart';
@@ -55,26 +57,16 @@ class LoginState extends BaseState<LoginScreen> {
             width: MediaQuery.of(context).size.width,
             height: MediaQuery.of(context).size.height,
             decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                stops: [
-                  0, 0.15, 0.70, 1
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: <Color>[
-                  Color(0xFF2891E5),
-                  Colors.white,
-                  Colors.white,
-                  Color(0xFF2891E5),
-                ], // red to yellow
-                tileMode: TileMode.clamp, // repeats the gradient over the canvas
-              ),
+              gradient: backgroundGradient,
             ),
           ),
           Container(
             alignment: Alignment.center,
             child: Container(
-              padding: EdgeInsets.only(left: 40, right: 40, bottom: 90),
+              width: MediaQuery.of(context).size.width > 600 ? 600 : MediaQuery.of(context).size.width,
+              color: Colors.white,
+              padding: EdgeInsets.only(left: 40, right: 40, bottom: 60, top: 60),
+              margin: EdgeInsets.only(bottom: 40),
               // color: Colors.white,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -84,7 +76,7 @@ class LoginState extends BaseState<LoginScreen> {
                     alignment: Alignment.centerLeft,
                     child: Text('Welcome to Stocial!',
                         style: TextStyle(
-                            color: Colors.blueAccent,
+                            color: colorPrimary,
                             decoration: TextDecoration.none,
                             fontSize: 24
                         )
@@ -95,7 +87,7 @@ class LoginState extends BaseState<LoginScreen> {
                     alignment: Alignment.centerLeft,
                     child: Text('Your investment buddy',
                         style: TextStyle(
-                            color: Colors.blueAccent,
+                            color: colorPrimary,
                             decoration: TextDecoration.none,
                             fontSize: 14
                         )
@@ -114,14 +106,9 @@ class LoginState extends BaseState<LoginScreen> {
                     controller: passwordController,
                   ),
                   Container(height: 10),
-                  Container(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                        onPressed: () {
-                          login();
-                        },
-                        child: Text("Login")
-                    ),
+                  StocialButton(
+                    text: 'Login',
+                    onPressed: () => login(),
                   ),
                   TextButton(
                       onPressed: () {

@@ -7,6 +7,7 @@ import 'package:stocial/collections.dart';
 import 'package:stocial/main.dart';
 
 import 'base_state.dart';
+import 'constants/colors.dart';
 import 'widgets/stocial_text_field.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -38,27 +39,16 @@ class SignUpState extends BaseState<SignUpScreen> {
             width: MediaQuery.of(context).size.width,
             height: MediaQuery.of(context).size.height,
             decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                stops: [
-                  0, 0.3, 0.70, 1
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: <Color>[
-                  Color(0xFF2891E5),
-                  Colors.white,
-                  Colors.white,
-                  Color(0xFF2891E5),
-                ], // red to yellow
-                tileMode: TileMode.clamp, // repeats the gradient over the canvas
-              ),
+              gradient: backgroundGradient,
             ),
           ),
           Container(
-            alignment: Alignment.topCenter,
+            alignment: Alignment.center,
             child: Container(
-              padding: EdgeInsets.only(left: 40, right: 40, top: 200),
-              // color: Colors.white,
+              width: MediaQuery.of(context).size.width > 600 ? 600 : MediaQuery.of(context).size.width,
+              color: Colors.white,
+              padding: EdgeInsets.only(left: 40, right: 40, bottom: 60, top: 60),
+              margin: EdgeInsets.only(bottom: 40),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,

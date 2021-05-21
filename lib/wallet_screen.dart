@@ -8,6 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:stocial/base_state.dart';
+import 'package:stocial/constants/colors.dart';
 import 'package:stocial/model/asset.dart';
 import 'package:stocial/model/ticker.dart';
 
@@ -63,16 +64,6 @@ class WalletState extends BaseState<WalletScreen> {
         width: double.infinity,
         child: Column(
           children: [
-            Container(
-              width: double.infinity,
-              color: Colors.blue,
-              padding: EdgeInsets.only(top: 0, right: 8, bottom: 8, left: 8),
-              child: Row(
-                children: [
-                  _getUsdBrlWidget()
-                ],
-              ),
-            ),
             if(loading) Padding(
               padding: EdgeInsets.only(top: 20),
               child: CircularProgressIndicator(),
@@ -102,13 +93,23 @@ class WalletState extends BaseState<WalletScreen> {
                   child: _buildWalletList(wallet),
                 )
             ),
+            Container(
+              width: double.infinity,
+              color: colorPrimary,
+              padding: EdgeInsets.only(right: 8, bottom: 5, top: 8, left: 8),
+              margin: EdgeInsets.only(top: 20),
+              child: Row(
+                children: [
+                  _getUsdBrlWidget()
+                ],
+              ),
+            )
           ],
         ),
       ),
       appBar: AppBar(
         elevation: 0,
         title: Container(
-          margin: EdgeInsets.only(left: 40),
           alignment: Alignment.center,
           width: double.infinity,
           child: Text('Stocial'),
@@ -385,6 +386,7 @@ class WalletState extends BaseState<WalletScreen> {
         groupsNames: wallet.getGroupsNames() ?? [],
         groupsInfo: wallet.getGroupsTotals(),
         groupSize: (String groupIndex) => wallet.getGroupSize(groupIndex) ?? 0,
+        color: colorPrimary,
         columns: ['Ticker', 'Price', 'Qtt', 'Total'],
         valueFor: ({required int columnIndex, required String groupKey, required int itemIndex}) {
           Asset? asset = wallet.getAsset(groupKey, itemIndex);

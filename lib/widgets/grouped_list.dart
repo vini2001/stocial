@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:stocial/constants/colors.dart';
 
 class StocialGroupedList extends StatefulWidget {
 
@@ -9,8 +10,9 @@ class StocialGroupedList extends StatefulWidget {
   final List<String> columns;
   final String Function({required String groupKey, required int itemIndex, required int columnIndex}) valueFor;
   final bool Function({required String groupKey, required int itemIndex})? isVisible;
+  final Color color;
 
-  StocialGroupedList({required this.groupsNames, required this.groupSize, required this.columns, required this.valueFor, this.isVisible, this.groupsInfo});
+  StocialGroupedList({required this.groupsNames, required this.groupSize, required this.columns, required this.valueFor, this.isVisible, this.groupsInfo, this.color = Colors.black});
 
   @override
   State<StatefulWidget> createState() {
@@ -52,7 +54,7 @@ class StocialGroupedListState extends State<StocialGroupedList> {
                 width: 50,
                 padding: EdgeInsets.symmetric(horizontal: 8),
                 decoration: BoxDecoration(
-                  color: Colors.blue,
+                  color: widget.color,
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(10),
                     bottomLeft: Radius.circular(10),
@@ -66,7 +68,7 @@ class StocialGroupedListState extends State<StocialGroupedList> {
                       Container(
                         padding: EdgeInsets.symmetric(vertical: 12, horizontal: 15),
                         decoration: BoxDecoration(
-                            color: Colors.blue,
+                            color: widget.color,
                             borderRadius: BorderRadius.only(
                               topRight: Radius.circular(10),
                             )
@@ -125,8 +127,9 @@ class StocialGroupedListState extends State<StocialGroupedList> {
                     padding: EdgeInsets.all(10),
                     margin: EdgeInsets.only(top: 10),
                     decoration: BoxDecoration(
-                        color: Colors.lightBlue,
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(10))
+                        color: colorPrimary,
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+                      border: Border.all(color: Colors.black45, width: 1.4)
                     ),
                     child: Row(
                       children: [
@@ -153,7 +156,7 @@ class StocialGroupedListState extends State<StocialGroupedList> {
                       ],
                     ),
                   ),
-                  color: Colors.blue,
+                  color: widget.color,
                 ),
                 Flexible(
                   child: StocialList(
@@ -236,7 +239,7 @@ class StocialList extends StatelessWidget {
         itemCount: lenght,
         itemBuilder: (context, index) {
           return Container(
-            color: index % 2 == 0 ? Colors.blue[50] : Colors.white,
+            color: index % 2 == 0 ? Color(0x07000000) : Colors.white,
             child: Column(
               children: [
                 if(isVisible == null || isVisible!(index)) Container(

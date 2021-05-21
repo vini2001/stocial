@@ -9,8 +9,9 @@ class StocialTextField extends StatelessWidget{
   final bool? obscureText;
   final Function(String?)? onChanged;
   final Key? textFieldKey;
+  final double borderRadius;
 
-  StocialTextField({this.controller, required this.labelText, this.keyboardType, this.obscureText, this.onChanged, this.textFieldKey});
+  StocialTextField({this.controller, required this.labelText, this.keyboardType, this.obscureText, this.onChanged, this.textFieldKey, this.borderRadius = 5});
 
   @override
   Widget build(BuildContext context) {
@@ -29,16 +30,16 @@ class StocialTextField extends StatelessWidget{
           floatingLabelBehavior: FloatingLabelBehavior.always,
           labelText: labelText,
           border: OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(10)),
-              borderSide: BorderSide(style: BorderStyle.none)
+              borderRadius: BorderRadius.all(Radius.circular(borderRadius)),
+              borderSide: BorderSide(style: BorderStyle.solid, width: 0.5),
           ),
           enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(10)),
-              borderSide: BorderSide(style: BorderStyle.none)
+              borderRadius: BorderRadius.all(Radius.circular(borderRadius)),
+              borderSide: BorderSide(style: BorderStyle.solid, width: 0.5),
           ),
           focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(10)),
-              borderSide: BorderSide(style: BorderStyle.none)
+              borderRadius: BorderRadius.all(Radius.circular(borderRadius)),
+              borderSide: BorderSide(style: BorderStyle.solid, width: 0.5),
           ),
           fillColor: Color(0x07000000),
         ),
