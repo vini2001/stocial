@@ -25,6 +25,8 @@ class LoginScreen extends StatefulWidget {
 
 class LoginState extends BaseState<LoginScreen> {
 
+  bool loading = false;
+
   @override
   void initState() {
     super.initState();
@@ -64,7 +66,12 @@ class LoginState extends BaseState<LoginScreen> {
             alignment: Alignment.center,
             child: Container(
               width: MediaQuery.of(context).size.width > 600 ? 600 : MediaQuery.of(context).size.width,
-              color: Colors.white,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(color: colorPrimary, spreadRadius: -2, blurRadius: 40, offset: Offset(0, 0))
+                ]
+              ),
               padding: EdgeInsets.only(left: 40, right: 40, bottom: 60, top: 60),
               margin: EdgeInsets.only(bottom: 40),
               // color: Colors.white,
@@ -108,7 +115,7 @@ class LoginState extends BaseState<LoginScreen> {
                   Container(height: 10),
                   StocialButton(
                     text: 'Login',
-                    onPressed: () => login(),
+                    onPressed: loading ? null : () =>login(),
                   ),
                   TextButton(
                       onPressed: () {
@@ -128,17 +135,26 @@ class LoginState extends BaseState<LoginScreen> {
     final email = emailController.text;
     final password = passwordController.text;
 
+    setState(() {
+      loading = true;
+    });
+
     UserCredential credentials = await auth!.signInWithEmailAndPassword(email: email, password: password);
     String? uid = credentials.user?.uid;
     if(uid != null) {
       StocialUser user = StocialUser();
       DocumentSnapshot docSn = await getUserByUid(uid);
+
       if(docSn.exists) {
         user.set(docSn);
         Navigator.of(context).pushReplacementNamed(Routes.wallet);
       }else{
         throw Exception('Not signed up');
       }
+    }else{
+      setState(() {
+        loading = false;
+      });
     }
   }
 

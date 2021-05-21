@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'package:stocial/collections.dart';
 import 'package:stocial/main.dart';
+import 'package:stocial/widgets/stocial_button.dart';
 
 import 'base_state.dart';
 import 'constants/colors.dart';
@@ -46,7 +47,12 @@ class SignUpState extends BaseState<SignUpScreen> {
             alignment: Alignment.center,
             child: Container(
               width: MediaQuery.of(context).size.width > 600 ? 600 : MediaQuery.of(context).size.width,
-              color: Colors.white,
+              decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(color: colorPrimary, spreadRadius: -2, blurRadius: 40, offset: Offset(0, 0))
+                  ]
+              ),
               padding: EdgeInsets.only(left: 40, right: 40, bottom: 60, top: 60),
               margin: EdgeInsets.only(bottom: 40),
               child: Column(
@@ -57,7 +63,6 @@ class SignUpState extends BaseState<SignUpScreen> {
                     alignment: Alignment.centerLeft,
                     child: Text('Sign up',
                         style: TextStyle(
-                            color: Colors.blueAccent,
                             decoration: TextDecoration.none,
                             fontSize: 24
                         )
@@ -68,7 +73,6 @@ class SignUpState extends BaseState<SignUpScreen> {
                     alignment: Alignment.centerLeft,
                     child: Text('And start making your life easier',
                         style: TextStyle(
-                            color: Colors.blueAccent,
                             decoration: TextDecoration.none,
                             fontSize: 14
                         )
@@ -93,12 +97,9 @@ class SignUpState extends BaseState<SignUpScreen> {
                   ),
                   Container(height: 40),
                   Container(height: 10),
-                  Container(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                        onPressed: () {
-                          cadastrar();
-                        }, child: Text("Submit")),
+                  StocialButton(
+                    text: 'Submit',
+                    onPressed: () => signUp(),
                   ),
                 ],
               ),
@@ -117,7 +118,7 @@ class SignUpState extends BaseState<SignUpScreen> {
     );
   }
 
-  Future cadastrar() async {
+  Future signUp() async {
     FirebaseAuth auth = FirebaseAuth.instance;
 
     final email = emailController.text;
