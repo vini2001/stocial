@@ -135,7 +135,7 @@ abstract class _WalletStore  with Store {
 
 
   Future<void> tdAmeritrade() async {
-    baseStateStore.goToRouteNamed(Routes.tdAmeritrade, onReturn: (dynamic argument) {
+    baseStateStore.goToRouteNamed(Routes.tdAmeritradeKey, onReturn: (dynamic argument) {
       if(argument != null) {
         final imported = argument as bool;
         print("imported: $imported");

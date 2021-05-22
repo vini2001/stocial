@@ -127,7 +127,6 @@ class TDAmeritradeState extends BaseState<TDAmeritradeScreen> {
       'Cookie': 'dv_data=2016815b5c5f11781ea5dc862b7615410716936a178e'
     };
     var request = http.Request('POST', Uri.parse(Urls.tdAmeritrade.tokenUrl));
-    print("refresj tplem: $refreshToken");
     request.bodyFields = {
       'grant_type': 'refresh_token',
       'client_id': '${widget.consumerKey}@AMER.OAUTHAP',
@@ -152,6 +151,8 @@ class TDAmeritradeState extends BaseState<TDAmeritradeScreen> {
     }
     else {
       print(response.reasonPhrase);
+      await storage.delete(key: 'td_ameritrade_access_token');
+      Navigator.of(context).pop();
     }
 
   }
