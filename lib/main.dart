@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:stocial/constants/colors.dart';
 import 'package:stocial/login_screen.dart';
+import 'package:stocial/signup_screen.dart';
 import 'package:stocial/splash_screen.dart';
 import 'package:stocial/td_ameritrade_consumer_key_screen.dart';
 import 'package:stocial/td_ameritrade_screen.dart';
@@ -45,6 +46,7 @@ class MyApp extends StatelessWidget {
           case Routes.tdAmeritrade: return _buildRoute(TDAmeritradeScreen(consumerKey: args));
           case Routes.login: return _buildRoute(LoginScreen());
           case Routes.tdAmeritradeKey: return _buildRoute(TDAmeritradeConsumerKeyScreen());
+          case Routes.signUp: return _buildRoute(SignUpScreen());
         }
       },
     );

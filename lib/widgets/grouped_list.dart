@@ -11,18 +11,27 @@ class StocialGroupedList extends StatefulWidget {
   final String Function({required String groupKey, required int itemIndex, required int columnIndex}) valueFor;
   final bool Function({required String groupKey, required int itemIndex})? isVisible;
   final Color color;
+  final StocialGroupedListController? controller;
 
-  StocialGroupedList({required this.groupsNames, required this.groupSize, required this.columns, required this.valueFor, this.isVisible, this.groupsInfo, this.color = Colors.black});
+  StocialGroupedList({required this.groupsNames, required this.groupSize, required this.columns, required this.valueFor, this.isVisible, this.groupsInfo, this.color = Colors.black, this.controller});
 
   @override
   State<StatefulWidget> createState() {
-    return StocialGroupedListState();
+    return StocialGroupedListState(controller);
   }
 
 }
 
 class StocialGroupedListState extends State<StocialGroupedList> {
+
+  final StocialGroupedListController? controller;
   var _groupListController = ScrollController();
+
+  StocialGroupedListState(this.controller) {
+    if(controller != null) {
+      controller?.stocialGroupedListState = this;
+    }
+  }
 
   int selectedGroup = 0;
 
@@ -267,4 +276,12 @@ class StocialList extends StatelessWidget {
     });
   }
 
+}
+
+class StocialGroupedListController {
+  StocialGroupedListState? stocialGroupedListState;
+  void notifyDataChanged() {
+    // ignore: invalid_use_of_protected_member
+    stocialGroupedListState?.setState(() {});
+  }
 }

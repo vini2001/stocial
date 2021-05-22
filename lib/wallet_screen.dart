@@ -1,26 +1,17 @@
-
-import 'dart:async';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cloud_functions/cloud_functions.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:mobx/mobx.dart';
 import 'package:stocial/base_state.dart';
 import 'package:stocial/constants/colors.dart';
 import 'package:stocial/model/asset.dart';
-import 'package:stocial/model/ticker.dart';
 
-import 'package:stocial/constants/constants.dart';
+import 'package:stocial/stores/wallet_store.dart';
 import 'package:stocial/widgets/grouped_list.dart';
 import 'package:stocial/widgets/stocial_text_field.dart';
-import 'package:stocial/user.dart';
 
-import 'constants/routes.dart';
-import 'main.dart';
-import 'model/currency_conversion.dart';
-import 'model/wallet.dart';
 
 class WalletScreen extends StatefulWidget {
   @override
@@ -33,28 +24,19 @@ class WalletScreen extends StatefulWidget {
 class WalletState extends BaseState<WalletScreen> {
 
   FirebaseFirestore firestore = FirebaseFirestore.instance;
-
-  Wallet? wallet;
-  List<Asset>? assetsList;
-
-  var _searchController = TextEditingController();
-  StocialUser stocialUser = StocialUser();
+  late WalletStore store;
 
   var _cpfCEIController = TextEditingController();
   var _passwordCEIController = TextEditingController();
-
-  StreamSubscription<DocumentSnapshot>? userStream;
-
-  bool showCEIImport = false;
-  bool loading = false;
-
-  String? _searchQuery;
+  final stocialGroupedListController = StocialGroupedListController();
 
   @override
   void initState() {
     super.initState();
-    getQuotes();
-    getWallet();
+    store = WalletStore(baseStateStore);
+    store.init();
+
+    initReactions();
   }
 
   @override
@@ -62,49 +44,52 @@ class WalletState extends BaseState<WalletScreen> {
     return Scaffold(
       body: Container(
         width: double.infinity,
-        child: Column(
-          children: [
-            if(loading) Padding(
-              padding: EdgeInsets.only(top: 20),
-              child: CircularProgressIndicator(),
-            ),
-            if(showCEIImport) _buildCEIImport(),
-            Container(
-              margin: EdgeInsets.only(top: 20),
-              width: 300,
-              child: StocialTextField(
-                textFieldKey: const Key('wallet-search-text-field'),
-                labelText: 'Search',
-                controller: _searchController,
-                onChanged: _search,
-              ),
-            ),
-            Expanded(
-                child: Container(
-                  margin: EdgeInsets.only(top: 0),
-                  width: MediaQuery.of(context).size.width - 20,
-                  decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                      boxShadow: [
-                        BoxShadow(color: Colors.black26, blurRadius: 10, spreadRadius: -3)
-                      ]
+        child: Observer(
+          builder: (context) {
+            return Column(
+              children: [
+                if(store.loading) Padding(
+                  padding: EdgeInsets.only(top: 20),
+                  child: CircularProgressIndicator(),
+                ),
+                if(store.showCEIImport) _buildCEIImport(),
+                Container(
+                  margin: EdgeInsets.only(top: 20),
+                  width: 300,
+                  child: StocialTextField(
+                    textFieldKey: const Key('wallet-search-text-field'),
+                    labelText: 'Search',
+                    onChanged: store.onSearchQueryChanged,
                   ),
-                  child: _buildWalletList(wallet),
+                ),
+                Expanded(
+                    child: Container(
+                      margin: EdgeInsets.only(top: 0),
+                      width: MediaQuery.of(context).size.width - 20,
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black26, blurRadius: 10, spreadRadius: -3)
+                          ]
+                      ),
+                      child: _buildWalletList(),
+                    )
+                ),
+                Container(
+                  width: double.infinity,
+                  color: colorPrimary,
+                  padding: EdgeInsets.only(right: 8, bottom: 5, top: 8, left: 8),
+                  margin: EdgeInsets.only(top: 20),
+                  child: Row(
+                    children: [
+                      _getUsdBrlWidget()
+                    ],
+                  ),
                 )
-            ),
-            Container(
-              width: double.infinity,
-              color: colorPrimary,
-              padding: EdgeInsets.only(right: 8, bottom: 5, top: 8, left: 8),
-              margin: EdgeInsets.only(top: 20),
-              child: Row(
-                children: [
-                  _getUsdBrlWidget()
-                ],
-              ),
-            )
-          ],
+              ],
+            );
+          },
         ),
       ),
       appBar: AppBar(
@@ -144,16 +129,16 @@ class WalletState extends BaseState<WalletScreen> {
                 ),
               ),
             ),
-            ListTile(
+            if(Platform.isAndroid || Platform.isIOS) ListTile(
               leading: Icon(Icons.add),
               title: Text('Import from TD Ameritrade'),
-              onTap: tdAmeritrade,
+              onTap: store.tdAmeritrade,
             ),
             ListTile(
               leading: Icon(Icons.add),
               title: Text('Import from CEI'),
               onTap: () {
-                refreshCEI();
+                store.refreshCEI();
                 pop();
               },
             ),
@@ -161,84 +146,12 @@ class WalletState extends BaseState<WalletScreen> {
             ListTile(
               leading: Icon(Icons.exit_to_app),
               title: Text('Logout'),
-              onTap: _logout,
+              onTap: () => store.logout(),
             ),
           ],
         ),
       ),
     );
-  }
-
-  Future getWallet() async {
-    List<QueryDocumentSnapshot> docs = (await firestore.collection('assets').where('user_id', isEqualTo: stocialUser.uid).orderBy('code').get()).docs;
-
-    setState(() {
-      assetsList = docs.map((snapshot) => Asset.fromJson(snapshot.data()!)).toList();
-      if(assetsList != null) {
-        wallet = Wallet(assetsList!);
-      }
-      loading = false;
-    });
-
-    updateCurrencies();
-    updateQuotes();
-  }
-
-  void groupWallet(wallet) {
-
-  }
-
-  Widget _buildStockItem(Asset asset) {
-    if(!(asset.visible)) return Container();
-    return Container(
-      padding: EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            asset.code,
-            style: TextStyle(
-                decoration: TextDecoration.none,
-                fontSize: 18,
-                color: Colors.black
-            ),
-          ),
-          Container(height: 13),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "${asset.quantity}",
-                style: TextStyle(
-                    decoration: TextDecoration.none,
-                    fontSize: 12,
-                    color: Colors.black
-                ),
-              ),
-              // if(asset.averagePrice != null) Container(
-              //   child: Text('${(((((stock['price'] - stock['averagePrice']) / stock['averagePrice'])) * 100) as double).toStringAsFixed(2)} %'),
-              // ),
-              Text(
-                "${asset.getCurrencySymbol()}${(asset.price * 1.0).toStringAsFixed(2)}",
-                style: TextStyle(
-                    decoration: TextDecoration.none,
-                    fontSize: 12,
-                    color: Colors.black
-                ),
-              ),
-            ],
-          ),
-          Divider()
-        ],
-      ),
-    );
-  }
-
-
-  void _search(String? value) {
-   setState(() {
-     _searchQuery = value;
-   });
   }
 
   _buildCEIImport() {
@@ -259,16 +172,18 @@ class WalletState extends BaseState<WalletScreen> {
               Divider(height: 40),
               StocialTextField(
                 controller: _cpfCEIController,
+                onChanged: store.onCpfCeiChanged,
                 labelText: 'CPF CEI',
                 keyboardType: TextInputType.number,
               ),
               StocialTextField(
                 controller: _passwordCEIController,
+                onChanged: store.onPasswordCeiChanged,
                 labelText: 'Senha CEI',
                 obscureText: true,
               ),
               ElevatedButton(onPressed: () {
-                importCEI();
+                store.importCEI();
               }, child: Text('Importar'))
             ],
           ),
@@ -277,114 +192,14 @@ class WalletState extends BaseState<WalletScreen> {
     );
   }
 
-  Future importCEI() async {
-    stocialUser.cpfCEI = _cpfCEIController.text;
-    stocialUser.passwordCEI = _passwordCEIController.text;
-
-    FlutterSecureStorage storage = FlutterSecureStorage();
-    storage.write(key: cei_user, value: stocialUser.cpfCEI);
-    storage.write(key: cei_password, value: stocialUser.passwordCEI);
-
-    setState(() {
-      showCEIImport = false;
-      loading = true;
-    });
-
-    final callable = FirebaseFunctions.instance.httpsCallable('importCei');
-
-    try {
-      final x = await callable({
-        "userId": stocialUser.uid,
-        "cpf_cei":  stocialUser.cpfCEI,
-        "password_cei": stocialUser.passwordCEI
-      });
-      print(x.data);
-      await getWallet();
-    } on FirebaseFunctionsException catch (e) {
-      print(e);
-    } catch (e) {
-      print(e);
-    }
-  }
-
-  // call the cloud function to assure we have the latest prices for the quotes
-  Future getQuotes() async {
-    print("getQuotes: loading...");
-    final callable = FirebaseFunctions.instance.httpsCallable('getQuotes');
-    try {
-      final x = await callable({});
-      print("getQuotes: ${x.data}");
-      updateQuotes();
-    } on FirebaseFunctionsException catch (e) {
-      print(e);
-    } catch (e) {
-      print(e);
-    }
-  }
-
-  Future refreshCEI() async {
-    setState(() {
-      showCEIImport = true;
-    });
-
-    FlutterSecureStorage storage = FlutterSecureStorage();
-    final user = await storage.read(key: cei_user);
-    final pass = await storage.read(key: cei_password);
-
-    if(user != null && pass != null) {
-      _cpfCEIController.text = user;
-      _passwordCEIController.text = pass;
-    }
-
-  }
-
-  Future<void> updateCurrencies() async {
-    List<QueryDocumentSnapshot> docs = (await firestore.collection('currencies').get()).docs;
-    for(QueryDocumentSnapshot snapshot in docs) {
-      if(snapshot.data() != null) {
-        final ticker = CurrencyConversion.fromJson(snapshot.data()!);
-        wallet?.addCurrencyConversion(ticker);
-      }
-    }
-  }
-
-  Future<void> updateQuotes() async {
-    print("toUpdateQuotes");
-
-    for(Asset asset in wallet!.getAssetsList()) {
-      List<QueryDocumentSnapshot> docs = (await firestore.collection('tickers').where('symbol', isEqualTo: asset.code).get()).docs;
-      for(QueryDocumentSnapshot snapshot in docs) {
-        if(snapshot.data() != null) {
-          final ticker = Ticker.fromJson(snapshot.data()!);
-          wallet?.updateTicker(ticker);
-        }
-      }
-    }
-
-    setState(() {});
-  }
-
-
-  Future<void> tdAmeritrade() async {
-    final imported =  await Navigator.of(context).pushNamed(Routes.tdAmeritradeKey) as bool;
-    print("imported: $imported");
-    if(imported is bool && imported) getWallet();
-  }
-
-  bool isMobile() {
-    try {
-      return (Platform.isAndroid || Platform.isIOS);
-    }catch(ex) {
-      return false;
-    }
-  }
-
-  _buildWalletList(Wallet? wallet) {
+  _buildWalletList() {
+    final wallet = store.wallet;
     if(wallet == null) return Container();
 
     return StocialGroupedList(
+        controller: stocialGroupedListController,
         groupsNames: wallet.getGroupsNames() ?? [],
-        groupsInfo: wallet.getGroupsTotals(),
+        groupsInfo: wallet.getGroupsTotals(usdBrlExchangeRate: store.usdBrlExchangeRate),
         groupSize: (String groupIndex) => wallet.getGroupSize(groupIndex) ?? 0,
         color: colorPrimary,
         columns: ['Ticker', 'Price', 'Qtt', 'Total'],
@@ -400,14 +215,12 @@ class WalletState extends BaseState<WalletScreen> {
           }
           return "";
         },
-        isVisible: ({required String groupKey, required int itemIndex}) {
-          return wallet.getAsset(groupKey, itemIndex)?.contains(_searchQuery ?? '') ?? true;
-        }
+        isVisible: store.isAssetVisible
     );
   }
 
   _getUsdBrlWidget() {
-    if(wallet?.usdBrlExchangeRate == null) return Container();
+    if(store.usdBrlExchangeRate == null) return Container();
     return Container(
       decoration: BoxDecoration(
           color: Colors.black26,
@@ -415,7 +228,7 @@ class WalletState extends BaseState<WalletScreen> {
       ),
       padding: EdgeInsets.symmetric(vertical: 4, horizontal: 10),
       child: Text(
-        'USD/BRL: ${wallet!.usdBrlExchangeRate}',
+        'USD/BRL: ${store.usdBrlExchangeRate}',
         style: TextStyle(
             fontSize: 12,
             color: Colors.white
@@ -424,10 +237,39 @@ class WalletState extends BaseState<WalletScreen> {
     );
   }
 
-  Future<void> _logout() async {
-    if(auth != null) {
-      await auth!.signOut();
-      Navigator.of(context).pushReplacementNamed(Routes.login);
-    }
+  @override
+  void initReactions() {
+    super.initReactions();
+
+    addReaction('onCPFCeiChanged', reaction((r) => store.cpfCei, (String? cpf) {
+      if(cpf != null && cpf != _cpfCEIController.text) {
+        _cpfCEIController.text = cpf;
+      }
+    }));
+
+    addReaction('onPassCeiChanged', reaction((r) => store.passwordCei, (String? pass) {
+      if(pass != null && pass != _passwordCEIController.text) {
+        _passwordCEIController.text = pass;
+      }
+    }));
+
+    addReaction('walletChanged', reaction((r) => store.assetsList, (dynamic ignore) {
+      stocialGroupedListController.notifyDataChanged();
+    }));
+
+    addReaction('searchQueryChanged', reaction((r) => store.searchQuery, (String? ignore) {
+      stocialGroupedListController.notifyDataChanged();
+    }));
+
+    addReaction('usdBrlExchangeRate', reaction((r) => store.usdBrlExchangeRate, (double? ignore) {
+      stocialGroupedListController.notifyDataChanged();
+    }));
+
+    addReaction('notifyWalletTable', reaction((r) => store.notifyWalletTable, (bool? notifyWalletTable) {
+      if(notifyWalletTable ?? false) {
+        stocialGroupedListController.notifyDataChanged();
+        store.notifyWalletTable = false;
+      }
+    }));
   }
 }

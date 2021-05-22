@@ -15,7 +15,7 @@ class StocialButton extends StatelessWidget {
       height: 38,
       child: ElevatedButton(
         onPressed: onPressed,
-        child: Text("Login"),
+        child: Text(text),
       ),
     );
   }

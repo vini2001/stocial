@@ -19,6 +19,7 @@ class StocialTextField extends StatelessWidget{
       margin: EdgeInsets.only(bottom: 20),
       height: 40,
       child: TextFormField(
+        enabled: true,
         controller: controller,
         key: textFieldKey,
         keyboardType: keyboardType,

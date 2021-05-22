@@ -4,4 +4,5 @@ class Routes {
   static const tdAmeritrade = 'tdAmeritrade';
   static const tdAmeritradeKey = 'tdAmeritradeKey';
   static const login = 'login';
+  static const String signUp = 'signUp';
 }

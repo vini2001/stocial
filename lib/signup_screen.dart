@@ -2,9 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
 
 import 'package:stocial/collections.dart';
 import 'package:stocial/main.dart';
+import 'package:stocial/stores/signup_store.dart';
 import 'package:stocial/widgets/stocial_button.dart';
 
 import 'base_state.dart';
@@ -22,13 +24,13 @@ class SignUpScreen extends StatefulWidget {
 class SignUpState extends BaseState<SignUpScreen> {
 
 
-  TextEditingController emailController = TextEditingController();
-  TextEditingController passwordController = TextEditingController();
-  TextEditingController nameController = TextEditingController();
+  late SignUpStore store;
 
   @override
   void initState() {
     super.initState();
+    store = SignUpStore(baseStateStore);
+    initReactions();
   }
 
   @override
@@ -82,63 +84,46 @@ class SignUpState extends BaseState<SignUpScreen> {
                   StocialTextField(
                     labelText: 'Name',
                     keyboardType: TextInputType.text,
-                    controller: nameController,
+                    onChanged: store.onNameChanged,
                   ),
                   StocialTextField(
                     labelText: 'Email',
                     keyboardType: TextInputType.emailAddress,
-                    controller: emailController,
+                    onChanged: store.onEmailChanged,
                   ),
                   StocialTextField(
                     keyboardType: TextInputType.text,
                     obscureText: true,
                     labelText: 'Password',
-                    controller: passwordController,
+                    onChanged: store.onPasswordChanged,
                   ),
                   Container(height: 40),
                   Container(height: 10),
-                  StocialButton(
-                    text: 'Submit',
-                    onPressed: () => signUp(),
+                  Observer(
+                    builder: (context) {
+                      return StocialButton(
+                        text: 'Submit',
+                        onPressed: store.loading ? null : () => store.signUp(),
+                      );
+                    },
                   ),
                 ],
               ),
             ),
           ),
-          AppBar(
-            elevation: 0,
-            backgroundColor: Colors.transparent,
-            title: Container(
-              alignment: Alignment.centerLeft,
-              child: Text('Stocial'),
+          Container(
+            height: 55,
+            child: AppBar(
+              elevation: 0,
+              backgroundColor: Colors.transparent,
+              title: Container(
+                alignment: Alignment.centerLeft,
+                child: Text('Stocial'),
+              ),
             ),
           ),
         ],
       ),
     );
   }
-
-  Future signUp() async {
-    FirebaseAuth auth = FirebaseAuth.instance;
-
-    final email = emailController.text;
-    final password = passwordController.text;
-    final name = nameController.text;
-
-    UserCredential credentials = await auth.createUserWithEmailAndPassword(email: email, password: password);
-    if(credentials.user?.uid != null) {
-      String? uid = credentials.user!.uid;
-      DocumentReference userDoc = firestore!.collection(COL_USER).doc(uid);
-      await userDoc.set({
-        'uid': uid,
-        'email': email,
-        'name': name
-      });
-
-      Navigator.of(context).pop();
-    }else {
-      debugPrint(credentials.toString());
-    }
-  }
-
 }

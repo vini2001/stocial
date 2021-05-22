@@ -5,8 +5,6 @@ import 'asset.dart';
 
 class Wallet {
 
-  double? usdBrlExchangeRate;
-
   Wallet(this.assetsList) {
     _wallet = Map();
     for(Asset asset in assetsList) {
@@ -48,12 +46,12 @@ class Wallet {
   }
 
 
-  List<String>? getGroupsTotals() {
+  List<String>? getGroupsTotals({double? usdBrlExchangeRate}) {
     List<String> walletInfo = [];
     _wallet.forEach((key, assets) {
       final total = _getCategoryTotal(key);
       if(assets![0].currency == 'American Dollars' && usdBrlExchangeRate != null) {
-        walletInfo.add('${getCurrencySymbol(assets[0].currency)}${total.toStringAsFixed(2)} / R\$${(total * usdBrlExchangeRate!).toStringAsFixed(2)}');
+        walletInfo.add('${getCurrencySymbol(assets[0].currency)}${total.toStringAsFixed(2)} / R\$${(total * usdBrlExchangeRate).toStringAsFixed(2)}');
       }else{
         walletInfo.add('${getCurrencySymbol(assets[0].currency)}${total.toStringAsFixed(2)}');
       }
@@ -68,12 +66,6 @@ class Wallet {
       case 'BRL': return 'R\$';
     }
     return '';
-  }
-
-  void addCurrencyConversion(CurrencyConversion currencyConversion) {
-    if(currencyConversion.from == 'USD' && currencyConversion.to == 'BRL') {
-      usdBrlExchangeRate = currencyConversion.value;
-    }
   }
 
   double _getCategoryTotal(String key) {
