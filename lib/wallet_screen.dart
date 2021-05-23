@@ -79,7 +79,7 @@ class WalletState extends BaseState<WalletScreen> {
                 Container(
                   width: double.infinity,
                   color: colorPrimary,
-                  padding: EdgeInsets.only(right: 8, bottom: 5, top: 8, left: 8),
+                  padding: EdgeInsets.only(right: 8, bottom: 10, top: 8, left: 20),
                   margin: EdgeInsets.only(top: 20),
                   child: Row(
                     children: [
@@ -226,7 +226,7 @@ class WalletState extends BaseState<WalletScreen> {
           color: Colors.black26,
           borderRadius: BorderRadius.all(Radius.circular(4))
       ),
-      padding: EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+      padding: EdgeInsets.only(left: 10, right: 10, bottom: 5, top: 5),
       child: Text(
         'USD/BRL: ${store.usdBrlExchangeRate}',
         style: TextStyle(

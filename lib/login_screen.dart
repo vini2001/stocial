@@ -33,19 +33,16 @@ class LoginState extends BaseState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          Container(
-            width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height,
-            decoration: const BoxDecoration(
-              gradient: backgroundGradient,
-            ),
-          ),
-          Observer(builder: (BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: backgroundGradient,
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SingleChildScrollView(
+          child: Observer(builder: (BuildContext context) {
             return Container(
-              alignment: Alignment.center,
+              padding: EdgeInsets.only(top: 150),
               child: Container(
                 width: MediaQuery.of(context).size.width > 600 ? 600 : MediaQuery.of(context).size.width,
                 decoration: BoxDecoration(
@@ -55,7 +52,7 @@ class LoginState extends BaseState<LoginScreen> {
                     ]
                 ),
                 padding: EdgeInsets.only(left: 40, right: 40, bottom: 60, top: 60),
-                margin: EdgeInsets.only(bottom: 40),
+                margin: EdgeInsets.only(bottom: 0, left: 20, right: 20),
                 // color: Colors.white,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -113,8 +110,8 @@ class LoginState extends BaseState<LoginScreen> {
               ),
             );
           },
-          )
-        ],
+          ),
+        ),
       ),
     );
   }

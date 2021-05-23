@@ -35,18 +35,25 @@ class SignUpState extends BaseState<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          Container(
-            width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height,
-            decoration: const BoxDecoration(
-              gradient: backgroundGradient,
-            ),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: backgroundGradient,
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          title: Container(
+            alignment: Alignment.centerLeft,
+            child: Text('Stocial'),
           ),
-          Container(
+        ),
+        body: SingleChildScrollView(
+          child: Container(
             alignment: Alignment.center,
+            margin: EdgeInsets.only(bottom: 100),
+            padding: EdgeInsets.only(top: 30),
             child: Container(
               width: MediaQuery.of(context).size.width > 600 ? 600 : MediaQuery.of(context).size.width,
               decoration: BoxDecoration(
@@ -56,7 +63,7 @@ class SignUpState extends BaseState<SignUpScreen> {
                   ]
               ),
               padding: EdgeInsets.only(left: 40, right: 40, bottom: 60, top: 60),
-              margin: EdgeInsets.only(bottom: 40),
+              margin: EdgeInsets.only(bottom: 0, left: 20, right: 20),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
@@ -111,18 +118,7 @@ class SignUpState extends BaseState<SignUpScreen> {
               ),
             ),
           ),
-          Container(
-            height: 55,
-            child: AppBar(
-              elevation: 0,
-              backgroundColor: Colors.transparent,
-              title: Container(
-                alignment: Alignment.centerLeft,
-                child: Text('Stocial'),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
